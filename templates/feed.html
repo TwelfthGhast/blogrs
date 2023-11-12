@@ -8,12 +8,14 @@
           <div class="col-9">
             <h4><a href={{ post.meta.path_from_root }} class="link-dark link-underline-opacity-25">{{ post.meta.title }}</a></h4>
           </div>
-          <div class="col-3">
+          <div class="col-3 text-right">
             <p>{{ post.meta.publish_dt.date() }} </p>
           </div>
         </div>
         <div class="row">
-          {{ post.body }}
+          <div class="container">
+            {{ post.body }}
+          </div>
         </div>
       </div>
     {% endfor %}
