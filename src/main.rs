@@ -14,8 +14,8 @@ struct AppState {
     blog: MarkDownRouteHandler,
 }
 
-async fn test_handler() -> String {
-    "Hello, World!".to_string()
+async fn feed_handler(State(state): State<AppState>) -> Html<String> {
+    state.blog.get_feed()
 }
 
 async fn blog_handler(uri: Uri, State(state): State<AppState>) -> (StatusCode, Html<String>) {
@@ -28,14 +28,16 @@ async fn fallback(uri: Uri) -> (StatusCode, String) {
 
 #[tokio::main]
 async fn main() {
-    let md_handler = md::MarkDownRouteHandler::new("../example".to_string());
+    let md_handler = md::MarkDownRouteHandler::new("example".to_string());
     let state = AppState { blog: md_handler };
 
-    let blog_routes = Router::new().fallback(blog_handler);
+    let blog_routes = Router::new()
+        .route("/", get(feed_handler))
+        .fallback(blog_handler);
     // build our application with a single route
     let app = Router::new()
         .nest("/blog", blog_routes)
-        .route("/", get(test_handler))
+        .route("/", get(feed_handler))
         .fallback(fallback)
         .with_state(state);
 

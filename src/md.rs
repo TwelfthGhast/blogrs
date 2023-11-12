@@ -21,6 +21,18 @@ struct MarkdownTemplate<'a> {
     md: &'a String,
 }
 
+#[derive(Template)]
+#[template(path = "feed.html", escape = "none")]
+struct FeedTemplate<'a> {
+    items: &'a Vec<FeedItem>,
+}
+
+struct FeedItem {
+    title: String,
+    body: String,
+    path_from_root: String,
+}
+
 impl MarkDownRouteHandler {
     pub fn new(directory: String) -> MarkDownRouteHandler {
         let mut handler = MarkDownRouteHandler {
@@ -75,5 +87,17 @@ impl MarkDownRouteHandler {
             ),
             None => (StatusCode::NOT_FOUND, Html(format!("No route for {}", uri))),
         }
+    }
+
+    pub fn get_feed(self) -> Html<String> {
+        let mut x: Vec<FeedItem> = Vec::new();
+        for (path, entry) in self._rendered_paths.iter() {
+            x.push(FeedItem {
+                title: "Title".to_string(),
+                body: entry.to_owned(),
+                path_from_root: format!("{}{}", "/blog", path.to_owned()),
+            });
+        }
+        Html(FeedTemplate { items: &x }.render().unwrap())
     }
 }

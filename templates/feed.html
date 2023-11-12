@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block body %}
+  {% for item in items %}
+    <h4><a href={{ item.path_from_root }}>{{ item.title }}</a></h4>
+    <p>{{ item.body }}</p>
+  {% endfor %}
+  {% call super() %}
+{% endblock %}
