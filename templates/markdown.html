@@ -2,22 +2,24 @@
 
 {% block body %}
   <div class="row">
-    <h2>{{ post_wrapper.current_post.meta.title }}</h2>
-    {{ post_wrapper.current_post.body }}
+    <div class="container">
+        <h2>{{ post_wrapper.current_post.meta.title }}</h2>
+        {{ post_wrapper.current_post.body }}
+    </div>
   </div>
-  <div class="row">
-    <div class="col">
+  <div class="row justify-content-between">
+    <div class="col-3">
         {% if post_wrapper.prev_meta.is_some() %}
-            <a type="button" class="btn btn-primary" href={{ post_wrapper.prev_meta.as_ref().unwrap().path_from_root }}>
+            <a type="button" class="btn btn-primary w-100" href={{ post_wrapper.prev_meta.as_ref().unwrap().path_from_root }}>
                 {{ post_wrapper.prev_meta.as_ref().unwrap().title }}
                 <br>
                 <small>{{ post_wrapper.prev_meta.as_ref().unwrap().publish_dt.date() }}</small>
             </a>
         {% endif %}
     </div>
-    <div class="col text-end">
+    <div class="col-3">
         {% if post_wrapper.next_meta.is_some() %}
-            <a type="button" class="btn btn-primary" href={{ post_wrapper.next_meta.as_ref().unwrap().path_from_root }}>
+            <a type="button" class="btn btn-primary w-100" href={{ post_wrapper.next_meta.as_ref().unwrap().path_from_root }}>
                 {{ post_wrapper.next_meta.as_ref().unwrap().title }}
                 <br>
                 <small>{{ post_wrapper.next_meta.as_ref().unwrap().publish_dt.date() }}</small>
