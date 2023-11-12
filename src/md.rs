@@ -10,10 +10,7 @@ use axum::response::Html;
 use crate::bootstrap_parser::bootstrap_mapper;
 use askama::Template;
 
-use chrono::{
-    NaiveDateTime,
-    TimeZone
-};
+use chrono::NaiveDateTime;
 use serde::{de, Deserialize, Deserializer};
 
 #[derive(Clone, Default)]
@@ -80,14 +77,15 @@ impl MarkDownRouteHandler {
                 let metadata_file = entry.path().join("metadata.toml");
                 let metadata_file_path = Path::new(&metadata_file);
 
+                #[allow(unused_assignments)]
                 let mut post_metadata: Option<PostMetadata> = None;
                 match fs::read_to_string(metadata_file_path) {
                     Ok(metadata) => {
                         println!("{}", metadata);
                         post_metadata = Some(toml::from_str(&metadata).unwrap());
                     }
-                    Err(_) => {
-                        println!("Error with {:?}", metadata_file_path);
+                    Err(err) => {
+                        println!("Error with {:?}: {}", metadata_file_path, err);
                         continue;
                     }
                 }
@@ -139,7 +137,7 @@ impl MarkDownRouteHandler {
 
     pub fn get_feed(self) -> Html<String> {
         let mut x: Vec<Post> = Vec::new();
-        for (path, post) in self._rendered_paths.iter() {
+        for (_path, post) in self._rendered_paths.iter() {
             x.push(post.clone());
         }
         Html(FeedTemplate { posts: &x }.render().unwrap())
