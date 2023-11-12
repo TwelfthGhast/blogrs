@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 
 {% block body %}
-  {{ md }}
+  <h2>{{ post.meta.title }}</h2>
+  {{ post.body }}
   {% call super() %}
 {% endblock %}

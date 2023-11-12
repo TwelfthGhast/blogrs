@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 
 {% block body %}
-  {% for item in items %}
-    <h4><a href={{ item.path_from_root }}>{{ item.title }}</a></h4>
-    <p>{{ item.body }}</p>
+  {% for post in posts %}
+    <h4><a href={{ post.path_from_root }}>{{ post.meta.title }}</a></h4>
+    <p>{{ post.meta.publish_date }} </p>
+    <div>{{ post.body }}</div>
   {% endfor %}
   {% call super() %}
 {% endblock %}

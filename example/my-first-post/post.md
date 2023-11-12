@@ -1,6 +1,4 @@
-## My first post
-
-# Test subheader
+## Test subheader
 This is my first post using markdown!
 
 ```python
