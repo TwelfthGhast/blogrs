@@ -1,7 +1,30 @@
 {% extends "base.html" %}
 
 {% block body %}
-  <h2>{{ post.meta.title }}</h2>
-  {{ post.body }}
-  {% call super() %}
+  <div class="row">
+    <h2>{{ post_wrapper.current_post.meta.title }}</h2>
+    {{ post_wrapper.current_post.body }}
+  </div>
+  <div class="row">
+    <div class="col">
+        {% if post_wrapper.prev_meta.is_some() %}
+            <a type="button" class="btn btn-primary" href={{ post_wrapper.prev_meta.as_ref().unwrap().path_from_root }}>
+                {{ post_wrapper.prev_meta.as_ref().unwrap().title }}
+                <br>
+                <small>{{ post_wrapper.prev_meta.as_ref().unwrap().publish_dt.date() }}</small>
+            </a>
+        {% endif %}
+    </div>
+    <div class="col text-end">
+        {% if post_wrapper.next_meta.is_some() %}
+            <a type="button" class="btn btn-primary" href={{ post_wrapper.next_meta.as_ref().unwrap().path_from_root }}>
+                {{ post_wrapper.next_meta.as_ref().unwrap().title }}
+                <br>
+                <small>{{ post_wrapper.next_meta.as_ref().unwrap().publish_dt.date() }}</small>
+            </a>
+        {% endif %}
+    </div>
+  </div>
 {% endblock %}
+
+{% call super() %}

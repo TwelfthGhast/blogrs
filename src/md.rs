@@ -18,7 +18,7 @@ use serde::{de, Deserialize, Deserializer};
 pub struct MarkDownRouteHandler {
     pub directory: String,
     _path_index: HashMap<String, usize>,
-    _rendered_paths: Vec<Post>
+    _rendered_paths: Vec<Post>,
 }
 
 // https://stackoverflow.com/questions/57614558/how-to-use-a-custom-serde-deserializer-for-chrono-timestamps
@@ -35,22 +35,31 @@ where
 #[derive(Clone, Debug, Deserialize)]
 struct PostMetadata {
     title: String,
+    #[allow(dead_code)]
     show_in_feed: bool,
     #[serde(deserialize_with = "deserialize_from_str")]
     publish_dt: NaiveDateTime,
+    #[serde(skip_deserializing)]
+    path_from_root: String,
 }
 
 #[derive(Clone, Debug)]
 struct Post {
     meta: PostMetadata,
     body: String,
-    path_from_root: String,
+}
+
+#[derive(Clone, Debug)]
+struct PostWrapper {
+    prev_meta: Option<PostMetadata>,
+    current_post: Post,
+    next_meta: Option<PostMetadata>,
 }
 
 #[derive(Template)]
 #[template(path = "markdown.html", escape = "none")]
 struct MarkdownTemplate<'a> {
-    post: &'a Post,
+    post_wrapper: &'a PostWrapper,
 }
 
 #[derive(Template)]
@@ -87,7 +96,16 @@ impl MarkDownRouteHandler {
                 match fs::read_to_string(metadata_file_path) {
                     Ok(metadata) => {
                         println!("{}", metadata);
-                        post_metadata = Some(toml::from_str(&metadata).unwrap());
+                        let mut meta: PostMetadata = toml::from_str(&metadata).unwrap();
+
+                        let mut stripped_path = entry.path().to_str().unwrap().to_string();
+                        assert!(stripped_path.starts_with(&self.directory));
+                        stripped_path = stripped_path
+                            .strip_prefix(&self.directory)
+                            .unwrap()
+                            .to_string();
+                        meta.path_from_root = format!("/blog{}", stripped_path);
+                        post_metadata = Some(meta);
                     }
                     Err(err) => {
                         println!("Error with {:?}: {}", metadata_file_path, err);
@@ -100,25 +118,12 @@ impl MarkDownRouteHandler {
                             .map(|event| -> Event { bootstrap_mapper(event) });
                         let mut html_output = String::new();
                         html::push_html(&mut html_output, parser);
-                        let mut stripped_path = entry.path().to_str().unwrap().to_string();
-                        assert!(stripped_path.starts_with(&self.directory));
-                        stripped_path = stripped_path
-                            .strip_prefix(&self.directory)
-                            .unwrap()
-                            .to_string();
-                        println!(
-                            "Found file: {} {} \n{:?}",
-                            entry.path().display(),
-                            stripped_path,
-                            html_output
-                        );
-                        self._rendered_paths.push(
-                            Post {
-                                meta: post_metadata.unwrap(),
-                                body: html_output,
-                                path_from_root: format!("/blog{}", stripped_path),
-                            },
-                        );
+
+                        println!("Found file: {} \n{:?}", entry.path().display(), html_output);
+                        self._rendered_paths.push(Post {
+                            meta: post_metadata.unwrap(),
+                            body: html_output,
+                        });
                     }
                     Err(_) => {
                         println!("Could not open file {:?}", entry.path());
@@ -127,9 +132,10 @@ impl MarkDownRouteHandler {
                 }
             }
         }
-        self._rendered_paths.sort_by(|a, b| a.meta.publish_dt.cmp(&b.meta.publish_dt));
+        self._rendered_paths
+            .sort_by(|a, b| a.meta.publish_dt.cmp(&b.meta.publish_dt));
         for (idx, p) in self._rendered_paths.iter().enumerate() {
-            self._path_index.insert(p.path_from_root.clone(), idx);
+            self._path_index.insert(p.meta.path_from_root.clone(), idx);
         }
     }
 
@@ -138,9 +144,34 @@ impl MarkDownRouteHandler {
         match vec_index {
             Some(index) => {
                 let post = &self._rendered_paths[*index];
-                (StatusCode::OK, Html(MarkdownTemplate { post: &post.clone() }.render().unwrap()))
-            },
-            None => (StatusCode::NOT_FOUND, Html(format!("No route for {:?}", uri)))
+                let wrapper = PostWrapper {
+                    prev_meta: if index >= &1 {
+                        Some(self._rendered_paths[*index - 1].meta.clone())
+                    } else {
+                        None
+                    },
+                    current_post: post.clone(),
+                    next_meta: if index + 1 < self._rendered_paths.len() {
+                        Some(self._rendered_paths[*index + 1].meta.clone())
+                    } else {
+                        None
+                    },
+                };
+                (
+                    StatusCode::OK,
+                    Html(
+                        MarkdownTemplate {
+                            post_wrapper: &wrapper,
+                        }
+                        .render()
+                        .unwrap(),
+                    ),
+                )
+            }
+            None => (
+                StatusCode::NOT_FOUND,
+                Html(format!("No route for {:?}", uri)),
+            ),
         }
     }
 

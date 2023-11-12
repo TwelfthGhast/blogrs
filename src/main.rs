@@ -1,5 +1,5 @@
 use axum::{
-    extract::{State, OriginalUri},
+    extract::{OriginalUri, State},
     http::{StatusCode, Uri},
     response::Html,
     routing::get,
@@ -18,7 +18,10 @@ async fn feed_handler(State(state): State<AppState>) -> Html<String> {
     state.blog.get_feed()
 }
 
-async fn blog_handler(OriginalUri(original_uri): OriginalUri, State(state): State<AppState>) -> (StatusCode, Html<String>) {
+async fn blog_handler(
+    OriginalUri(original_uri): OriginalUri,
+    State(state): State<AppState>,
+) -> (StatusCode, Html<String>) {
     state.blog.get_html(OriginalUri(original_uri))
 }
 
