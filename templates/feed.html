@@ -3,7 +3,7 @@
 {% block body %}
   {% for post in posts %}
     <h4><a href={{ post.path_from_root }}>{{ post.meta.title }}</a></h4>
-    <p>{{ post.meta.publish_date }} </p>
+    <p>{{ post.meta.publish_dt }} </p>
     <div>{{ post.body }}</div>
   {% endfor %}
   {% call super() %}

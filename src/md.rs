@@ -9,10 +9,11 @@ use axum::response::Html;
 
 use crate::bootstrap_parser::bootstrap_mapper;
 use askama::Template;
-use std::fmt::Display;
-use std::str::FromStr;
 
-use chrono::NaiveDate;
+use chrono::{
+    NaiveDateTime,
+    TimeZone
+};
 use serde::{de, Deserialize, Deserializer};
 
 #[derive(Clone, Default)]
@@ -24,14 +25,12 @@ pub struct MarkDownRouteHandler {
 // https://stackoverflow.com/questions/57614558/how-to-use-a-custom-serde-deserializer-for-chrono-timestamps
 // You can use this deserializer for any type that implements FromStr
 // and the FromStr::Err implements Display
-fn deserialize_from_str<'de, S, D>(deserializer: D) -> Result<S, D::Error>
+fn deserialize_from_str<'de, D>(deserializer: D) -> Result<NaiveDateTime, D::Error>
 where
-    S: FromStr,      // Required for S::from_str...
-    S::Err: Display, // Required for .map_err(de::Error::custom)
     D: Deserializer<'de>,
 {
     let s: String = Deserialize::deserialize(deserializer)?;
-    S::from_str(&s).map_err(de::Error::custom)
+    NaiveDateTime::parse_from_str(&s, "%Y-%m-%d %H:%M:%S%z").map_err(de::Error::custom)
 }
 
 #[derive(Clone, Debug, Deserialize)]
@@ -39,7 +38,7 @@ struct PostMetadata {
     title: String,
     show_in_feed: bool,
     #[serde(deserialize_with = "deserialize_from_str")]
-    publish_date: chrono::NaiveDate,
+    publish_dt: NaiveDateTime,
 }
 
 #[derive(Clone, Debug)]
