@@ -1,5 +1,6 @@
 use axum::extract::OriginalUri;
 use pulldown_cmark::{html, Event, Parser};
+use tokio::time::Instant;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -13,6 +14,7 @@ use askama::Template;
 
 use chrono::NaiveDateTime;
 use serde::{de, Deserialize, Deserializer};
+use tracing;
 
 #[derive(Clone, Default)]
 pub struct MarkDownRouteHandler {
@@ -78,11 +80,11 @@ impl MarkDownRouteHandler {
             _rendered_paths: Vec::new(),
         };
         handler.render();
-        println!("{:?}", handler._rendered_paths);
         handler
     }
 
     fn render(&mut self) {
+        let start = Instant::now();
         self._rendered_paths = Vec::new();
         self._path_index = HashMap::new();
         for entry in WalkDir::new(&self.directory) {
@@ -97,7 +99,7 @@ impl MarkDownRouteHandler {
                 let mut post_metadata: Option<PostMetadata> = None;
                 match fs::read_to_string(metadata_file_path) {
                     Ok(metadata) => {
-                        println!("{}", metadata);
+                        tracing::debug!(metadata);
                         let mut meta: PostMetadata = toml::from_str(&metadata).unwrap();
 
                         let mut stripped_path = entry.path().to_str().unwrap().to_string();
@@ -110,7 +112,7 @@ impl MarkDownRouteHandler {
                         post_metadata = Some(meta);
                     }
                     Err(err) => {
-                        println!("Error with {:?}: {}", metadata_file_path, err);
+                        tracing::error!(?metadata_file_path, ?err);
                         continue;
                     }
                 }
@@ -121,14 +123,14 @@ impl MarkDownRouteHandler {
                         let mut html_output = String::new();
                         html::push_html(&mut html_output, parser);
 
-                        println!("Found file: {} \n{:?}", entry.path().display(), html_output);
+                        tracing::info!("loaded file: {}", entry.path().display());
                         self._rendered_paths.push(Post {
                             meta: post_metadata.unwrap(),
                             body: html_output,
                         });
                     }
                     Err(_) => {
-                        println!("Could not open file {:?}", entry.path());
+                        tracing::error!("Error reading file {}", entry.path().display());
                         continue;
                     }
                 }
@@ -139,6 +141,7 @@ impl MarkDownRouteHandler {
         for (idx, p) in self._rendered_paths.iter().enumerate() {
             self._path_index.insert(p.meta.path_from_root.clone(), idx);
         }
+        tracing::info!("indexing finished in {:?}", start.elapsed());
     }
 
     pub fn get_html(self, OriginalUri(uri): OriginalUri) -> (StatusCode, Html<String>) {

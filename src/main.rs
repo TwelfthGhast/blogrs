@@ -9,6 +9,8 @@ use md::MarkDownRouteHandler;
 mod bootstrap_parser;
 mod md;
 use tower_http::services::ServeDir;
+use tracing;
+use tracing_subscriber;
 
 #[derive(Clone)]
 struct AppState {
@@ -32,6 +34,8 @@ async fn fallback(uri: Uri) -> (StatusCode, String) {
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::fmt().json().init();
+    tracing::info!("initializingapp");
     let md_handler = md::MarkDownRouteHandler::new("example".to_string());
     let state = AppState { blog: md_handler };
 
@@ -47,6 +51,8 @@ async fn main() {
         .fallback(fallback)
         .with_state(state);
 
+    tracing::info!("initialized app");
+    tracing::info!("serving app");
     // run it with hyper on localhost:3000
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
         .serve(app.into_make_service())
