@@ -1,9 +1,9 @@
 use axum::extract::OriginalUri;
 use pulldown_cmark::{html, Event, Parser};
-use tokio::time::Instant;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
+use tokio::time::Instant;
 use walkdir::WalkDir;
 
 use axum::http::StatusCode;
