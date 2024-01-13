@@ -39,6 +39,8 @@ struct PostMetadata {
     show_in_feed: bool,
     #[serde(deserialize_with = "deserialize_from_str")]
     publish_dt: NaiveDateTime,
+    #[serde(default)]
+    feed_summary: String,
     #[serde(skip_deserializing)]
     path_from_root: String,
 }
