@@ -32,7 +32,7 @@ async fn fallback(uri: Uri) -> (StatusCode, String) {
 
 #[tokio::main]
 async fn main() {
-    let md_handler = md::MarkDownRouteHandler::new("/posts".to_string());
+    let md_handler = md::MarkDownRouteHandler::new("example".to_string());
     let state = AppState { blog: md_handler };
 
     let blog_routes = Router::new()

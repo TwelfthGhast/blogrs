@@ -14,7 +14,11 @@
         </div>
         <div class="row">
           <div class="container">
-            {{ post.body }}
+            {% if post.meta.feed_summary != "" %}
+              {{ post.meta.feed_summary }}
+            {% else %}
+              {{ post.body }}
+            {% endif %}
           </div>
         </div>
       </div>
